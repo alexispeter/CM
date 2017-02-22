@@ -155,35 +155,26 @@ class CM_Cli_CommandManagerTest extends CMTest_TestCase {
         $command = $this->mockClass('CM_Cli_Command')->newInstanceWithoutConstructor();
         $command->mockMethod('getSynchronized');
         $command->mockMethod('getKeepalive');
-        $command->mockMethod('extractParameters');
+        $command->mockMethod('getPackageName')->set('package');
+        $command->mockMethod('getMethodName')->set('method');
+        $command->mockMethod('extractParameters')->set([]);
+        $command->mockMethod('run')
+            ->at(0, function () {
+            })
+            ->at(1, function () {
+                throw new Exception('Big Fucking Error');
+            });
 
         $commandManager = $this->mockObject('CM_Cli_CommandManager');
         $commandManager->mockMethod('_getCommand')->set($command);
-        $commandManager->mockMethod('_getProcess')
-            ->at(0, function () use ($processMock) {
-                $processSuccess = $processMock->newInstance();
-                $processSuccess->mockMethod('waitForChildren')->set([
-                    new CM_Process_Result(0),
-                    new CM_Process_Result(0),
-                    new CM_Process_Result(0),
-                    new CM_Process_Result(0),
-                ]);
-                return $processSuccess;
-            })
-            ->at(1, function () use ($processMock) {
-                $processFailure = $processMock->newInstance();
-                $processFailure->mockMethod('waitForChildren')->set([
-                    new CM_Process_Result(0),
-                    new CM_Process_Result(1),
-                    new CM_Process_Result(0),
-                    new CM_Process_Result(0),
-                ]);
-                return $processFailure;
-            });
+        $mockOutputError = $commandManager->mockMethod('_outputError')->at(0, function($message) {
+            $this->assertSame('ERROR: Big Fucking Error' . PHP_EOL, $message);
+        });
 
         /** @var CM_Cli_CommandManager $commandManager */
         $this->assertSame(0, $commandManager->run(new CM_Cli_Arguments(['bin/cm', 'foo', 'bar'])));
         $this->assertSame(1, $commandManager->run(new CM_Cli_Arguments(['bin/cm', 'foo', 'bar'])));
+        $this->assertSame(1, $mockOutputError->getCallCount());
     }
 
     /**
