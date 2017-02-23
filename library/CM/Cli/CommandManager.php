@@ -255,15 +255,9 @@ class CM_Cli_CommandManager {
      * @return boolean
      */
     protected function _executeCommand(CM_Cli_Command $command, CM_Cli_Arguments $arguments, CM_InputStream_Interface $streamInput, CM_OutputStream_Interface $streamOutput, CM_OutputStream_Interface $streamError) {
-        $transactionName = 'cm ' . $command->getPackageName() . ' ' . $command->getMethodName();
         try {
             $parameters = $command->extractParameters($arguments);
             $this->_checkUnusedArguments($arguments);
-            if ($command->getKeepalive()) {
-                CM_Service_Manager::getInstance()->getNewrelic()->ignoreTransaction();
-            } else {
-                CM_Service_Manager::getInstance()->getNewrelic()->startTransaction($transactionName);
-            }
 
             $command->run($parameters, $streamInput, $streamOutput, $streamError);
             return true;

@@ -63,15 +63,8 @@ class CM_Cli_Command {
     /**
      * @return string
      */
-    public function getMethodName() {
-        return CM_Util::uncamelize($this->_method->getName());
-    }
-
-    /**
-     * @return string
-     */
     public function getName() {
-        return $this->getPackageName() . ' ' . $this->getMethodName();
+        return $this->getPackageName() . ' ' . $this->_getMethodName();
     }
 
     /**
@@ -102,8 +95,15 @@ class CM_Cli_Command {
      * @return bool
      */
     public function match($packageName, $methodName) {
-        $methodMatched = ($methodName === $this->getMethodName());
+        $methodMatched = ($methodName === $this->_getMethodName());
         $packageMatched = ($packageName === $this->getPackageName());
         return ($packageMatched && $methodMatched);
+    }
+
+    /**
+     * @return string
+     */
+    protected function _getMethodName() {
+        return CM_Util::uncamelize($this->_method->getName());
     }
 }
